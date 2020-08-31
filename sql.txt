@@ -1,0 +1,1151 @@
+﻿ V3.0.0
+
+CREATE TABLE `oscshop_lionfish_comshop_member_integral_flow` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `member_id` int(10) NOT NULL COMMENT '会员id',
+  `in_out` enum('in','out') NOT NULL COMMENT '增加积分，还是减少积分',
+  `type` enum('goodsbuy','refundorder','system_add','system_del','orderbuy') NOT NULL COMMENT '积分获赠/减少 类型',
+  `order_id` int(10) DEFAULT NULL COMMENT '订单id',
+  `order_goods_id` int(10) DEFAULT NULL COMMENT '订单商品id',
+  `score` float(10,2) DEFAULT '0.00' COMMENT '积分数量',
+  `after_operate_score` float(10,2) DEFAULT '0.00' COMMENT '操作后的积分',
+  `state` tinyint(1) DEFAULT '0' COMMENT '0 还未赠送，1处理成功，',
+  `remark` varchar(255) DEFAULT NULL COMMENT '说明',
+  `addtime` int(10) NOT NULL COMMENT '添加时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='积分流水记录表';
+
+
+ ALTER TABLE `oscshop_lionfish_community_head` ADD `agent_id` INT(10) NULL DEFAULT '0' COMMENT '推荐人id' AFTER `member_id`, ADD INDEX (`agent_id`);
+
+ CREATE TABLE `oscshop_lionfish_community_head_invite_recod` (
+ `id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+ `head_id` INT(10) NOT NULL COMMENT '团长id' ,
+ `agent_member_id` INT(10) NOT NULL COMMENT '推荐人id' ,
+ `money` FLOAT(10,2) NOT NULL COMMENT '奖励金额' ,
+ `addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+ PRIMARY KEY (`id`), INDEX (`head_id`), INDEX (`agent_member_id`)
+ ) ENGINE = InnoDB COMMENT = '狮子鱼团长推荐团长记录表';
+
+ ALTER TABLE `oscshop_lionfish_community_head_commiss_order` ADD `type` ENUM('orderbuy','commiss','tuijian') NOT NULL DEFAULT 'orderbuy' COMMENT 'orderbuy 团员订单购买 ,commiss 下级的会员订单购买,tuijian 推荐团长的佣金' AFTER `head_id`;
+ ALTER TABLE `oscshop_lionfish_community_head_commiss_order` ADD `child_head_id` INT(10) NULL DEFAULT '0' COMMENT '下级团长id' AFTER `head_id`;
+ ALTER TABLE `oscshop_lionfish_community_head_commiss_order` ADD `level` INT(10) NULL DEFAULT '0' COMMENT '第几层分佣' AFTER `type`;
+
+ CREATE TABLE IF NOT EXISTS `oscshop_lionfish_comshop_community_head_level` (
+  `id` int(10) NOT NULL COMMENT '自增id',
+  `levelname` varchar(255) NOT NULL COMMENT '等级名称',
+  `commission1` float(10,2) DEFAULT '0.00' COMMENT '1级分销比例',
+  `commission2` float(10,2) DEFAULT '0.00' COMMENT '2级分销比例',
+  `commission3` float(10,2) DEFAULT '0.00' COMMENT '3级分销比例'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='狮子鱼商城团长等级表';
+
+ALTER TABLE `oscshop_lionfish_comshop_community_head_level`
+  ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `oscshop_lionfish_comshop_community_head_level`
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增id';
+ALTER TABLE `oscshop_lionfish_community_head` ADD `level_id` INT(10) NULL DEFAULT '0' COMMENT '团长等级id' AFTER `agent_id`;
+ALTER TABLE `oscshop_lionfish_comshop_community_head_level` CHANGE `commission1` `commission` FLOAT(10,2) NULL DEFAULT '0.00' COMMENT '分销比例';
+ALTER TABLE `oscshop_lionfish_comshop_community_head_level` DROP `commission2`, DROP `commission3`;
+ALTER TABLE `oscshop_lionfish_comshop_good_common` ADD `is_modify_head_commission` TINYINT(1) NULL DEFAULT '0' COMMENT '是否开启独立配置团长等级分佣' AFTER `community_head_commission`, ADD `community_head_commission_modify` TEXT NULL COMMENT '自定义团长等级分佣配置信息' AFTER `is_modify_head_commission`;
+ALTER TABLE `oscshop_lionfish_community_head_commiss_order` ADD `bili` FLOAT(10,2) NULL DEFAULT '0' COMMENT '分销分佣比例' AFTER `type`;
+ALTER TABLE `oscshop_lionfish_comshop_member` CHANGE `score` `score` FLOAT(10,2) NULL DEFAULT '0' COMMENT '积分';
+
+
+
+V2.6.0
+
+
+ ALTER TABLE `oscshop_lionfish_comshop_member_charge_flow` ADD `operate_end_yuer` FLOAT(10,2) NULL DEFAULT '0' COMMENT '当前操作结束后余额' AFTER `money`;
+
+
+V2.0
+
+
+ALTER TABLE `oscshop_lionfish_comshop_supply` ADD `login_name` VARCHAR(50) NULL COMMENT '供应商登录名称' AFTER `apptime`, ADD `login_password` VARCHAR(100) NULL COMMENT '供应商登录密码' AFTER `login_name`, ADD `login_slat` VARCHAR(50) NULL COMMENT '密码盐值' AFTER `login_password`;
+
+ALTER TABLE `oscshop_lionfish_comshop_order_goods` ADD `fullreduction_money` FLOAT(10,2) NULL DEFAULT '0' COMMENT '满减金额' AFTER `oldprice`, ADD `voucher_credit` FLOAT(10,2) NULL DEFAULT '0' COMMENT '优惠券优惠金额' AFTER `fullreduction_money`;
+ALTER TABLE `oscshop_lionfish_comshop_order_goods` ADD `fenbi_li` FLOAT(10,2) NULL DEFAULT '0' COMMENT '订单中金额占比' AFTER `voucher_credit`;
+ALTER TABLE `oscshop_lionfish_comshop_supply` ADD `type` TINYINT(1) NULL DEFAULT '0' COMMENT '0 平台自营，1入驻' AFTER `state`;
+ALTER TABLE `oscshop_lionfish_comshop_supply` ADD `commiss_bili` INT(10) NULL DEFAULT '0' COMMENT '供应商提成。百分比' AFTER `type`;
+
+CREATE TABLE IF NOT EXISTS `oscshop_lionfish_supply_commiss_order` (
+  `id` int(10) NOT NULL COMMENT '自增ID',
+  `supply_id` int(10) NOT NULL COMMENT '供应商id',
+  `order_id` int(10) NOT NULL COMMENT '订单ID',
+  `order_goods_id` int(10) DEFAULT '0' COMMENT '商品订单id',
+  `state` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否结算：0，待计算。1，已结算。2，订单取消',
+  `money` float(10,2) NOT NULL DEFAULT '0.00' COMMENT '分佣金额',
+  `addtime` int(10) NOT NULL COMMENT '添加时间'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+ALTER TABLE `oscshop_lionfish_supply_commiss_order`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `supply_id` (`supply_id`);
+
+ALTER TABLE `oscshop_lionfish_supply_commiss_order`
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增ID';
+
+CREATE TABLE IF NOT EXISTS `oscshop_lionfish_supply_commiss` (
+  `id` int(10) NOT NULL COMMENT '自增ID',
+  `supply_id` int(10) NOT NULL COMMENT '供应商ID',
+  `money` float(10,2) DEFAULT '0.00' COMMENT '可提现金额',
+  `dongmoney` float(10,2) DEFAULT '0.00' COMMENT '提现中金额',
+  `getmoney` float(10,2) DEFAULT '0.00' COMMENT '已提现金额'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+ALTER TABLE `oscshop_lionfish_supply_commiss`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `supply_id` (`supply_id`);
+
+ALTER TABLE `oscshop_lionfish_supply_commiss`
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增ID';
+
+
+CREATE TABLE IF NOT EXISTS `oscshop_lionfish_supply_tixian_order` (
+  `id` int(10) NOT NULL COMMENT '自增id',
+  `supply_id` int(10) NOT NULL COMMENT '团长id',
+  `money` float(10,2) NOT NULL COMMENT '提现金额',
+  `service_charge` float(10,2) DEFAULT '0.00' COMMENT '手续费',
+  `state` tinyint(1) NOT NULL COMMENT '提现状态，0申请中，1提现成功，2体现失败',
+  `shentime` int(10) NOT NULL COMMENT '审核时间',
+  `is_send_fail` tinyint(1) DEFAULT '0' COMMENT '是否发送是否，1是，0否',
+  `fail_msg` varchar(255) DEFAULT NULL COMMENT '发送失败原因',
+  `addtime` int(10) NOT NULL COMMENT '提交时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='分销佣金提现表';
+
+ALTER TABLE `oscshop_lionfish_supply_tixian_order`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `supply_id` (`supply_id`);
+
+ALTER TABLE `oscshop_lionfish_supply_tixian_order`
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增id';
+
+ALTER TABLE `oscshop_lionfish_supply_commiss_order` ADD `total_money` FLOAT(10,2) NULL DEFAULT '0' COMMENT '总金额' AFTER `order_goods_id`, ADD `comunity_blili` FLOAT(10,2) NULL DEFAULT '0' COMMENT '服务费比例' AFTER `total_money`;
+ALTER TABLE `oscshop_lionfish_supply_commiss_order` ADD `head_commiss_money` FLOAT(10,2) NULL DEFAULT '0' COMMENT '团长分佣金额' AFTER `state`;
+ALTER TABLE `oscshop_lionfish_supply_tixian_order` ADD `bankname` VARCHAR(200) NULL COMMENT '转账类型。微信，支付宝，银行' AFTER `fail_msg`, ADD `bankaccount` VARCHAR(200) NULL COMMENT '账户' AFTER `bankname`, ADD `bankusername` VARCHAR(200) NULL COMMENT '持卡人姓名' AFTER `bankaccount`;
+
+CREATE TABLE IF NOT EXISTS `oscshop_lionfish_comshop_member_charge_flow` (
+  `id` int(10) NOT NULL COMMENT '自增id',
+  `formid` varchar(255) DEFAULT NULL COMMENT '充值时候的prepayid',
+  `member_id` int(10) NOT NULL COMMENT '会员id',
+  `trans_id` varchar(100) DEFAULT NULL COMMENT '交易号',
+  `money` decimal(10,2) NOT NULL COMMENT '充值金额',
+  `state` tinyint(1) NOT NULL COMMENT '0，未支付，1已支付,3余额付款，4退款到余额，5后台充值,6 裂变红包,7 会员升级，8后台扣款',
+  `charge_time` int(10) NOT NULL COMMENT '充值时间',
+  `remark` varchar(255) DEFAULT NULL COMMENT '充值描述',
+  `add_time` int(10) NOT NULL COMMENT '添加时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='狮子鱼商城会员充值记录表';
+
+ALTER TABLE `oscshop_lionfish_comshop_member_charge_flow`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `member_id` (`member_id`);
+
+ALTER TABLE `oscshop_lionfish_comshop_member_charge_flow`
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增id';
+
+CREATE TABLE `oscshop_lionfish_comshop_community_pickup_member` (
+`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+ `community_id` INT(10) NOT NULL COMMENT '社区id' ,
+ `member_id` INT(10) NOT NULL COMMENT '会员id' ,
+ `state` TINYINT(1) NOT NULL DEFAULT '0' COMMENT '状态，0未审核，1审核通过' ,
+ `remark` VARCHAR(255) NULL COMMENT '备注' ,
+ `addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+ PRIMARY KEY (`id`), INDEX (`member_id`), INDEX (`community_id`)
+ ) ENGINE = InnoDB COMMENT = '核销人员表';
+
+ CREATE TABLE `oscshop_lionfish_comshop_community_pickup_member_record` (
+ `id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+ `order_id` INT(10) NOT NULL COMMENT '订单id' ,
+ `community_id` INT(10) NOT NULL COMMENT '社区id' ,
+ `member_id` INT(10) NOT NULL COMMENT '会员id' ,
+ `addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+ PRIMARY KEY (`id`), INDEX (`order_id`)
+ ) ENGINE = InnoDB COMMENT = '核销员核销记录';
+
+ ALTER TABLE `oscshop_lionfish_comshop_member` ADD `pickup_id` INT(10) NULL DEFAULT '0' COMMENT '自提关联id' AFTER `last_login_ip`;
+
+ ALTER TABLE `oscshop_lionfish_comshop_community_pickup_member_record` ADD `order_sn` VARCHAR(100) NULL COMMENT '订单编号' AFTER `order_id`;
+
+ ALTER TABLE `oscshop_lionfish_comshop_order` ADD `last_refund_order_status_id` INT(10) NULL DEFAULT '0' COMMENT '申请退款时，该订单的上一订单状态' AFTER `order_status_id`;
+
+
+
+
+V1.8.1
+
+CREATE TABLE IF NOT EXISTS `oscshop_lionfish_comshop_member_shopinfo` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `member_id` int(10) NOT NULL COMMENT '会员id',
+  `shop_name` varchar(255) NOT NULL COMMENT '店铺名称',
+  `shop_mobile` varchar(50) NOT NULL COMMENT '店铺手机号',
+  `imgGroup` text COMMENT '营业执照',
+  `otherImgGroup` text COMMENT '其他证件',
+  `state` tinyint(1) NOT NULL COMMENT '状态',
+  `addtime` int(10) NOT NULL COMMENT '申请时间',
+  PRIMARY KEY (`id`),
+  KEY `member_id` (`member_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='狮子鱼商城用户店铺申请表' AUTO_INCREMENT=1 ;
+
+
+V1.8.0
+ALTER TABLE `oscshop_lionfish_community_head` ADD `rest` TINYINT(1) NULL DEFAULT '0' COMMENT '团长休息' AFTER `enable`;
+ALTER TABLE `oscshop_lionfish_comshop_address` ADD `lon_lat` VARCHAR(30) NULL DEFAULT '' COMMENT '地址经纬度' AFTER `address_name`;
+ALTER TABLE `oscshop_lionfish_comshop_address` ADD `lou_meng_hao` VARCHAR(100) NULL DEFAULT '' COMMENT '门牌号-楼号' AFTER `lon_lat`;
+CREATE TABLE IF NOT EXISTS `oscshop_lionfish_comshop_jiauser` (
+  `id` bigint(20) unsigned NOT NULL,
+  `username` varchar(32) DEFAULT NULL,
+  `avatar` varchar(255) DEFAULT NULL,
+  `mobile` varchar(16) DEFAULT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+ALTER TABLE `oscshop_lionfish_comshop_jiauser`
+  ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `oscshop_lionfish_comshop_jiauser`
+  MODIFY `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT;
+CREATE TABLE IF NOT EXISTS `oscshop_lionfish_comshop_member_level` (
+  `id` int(10) NOT NULL COMMENT '自增id',
+  `level` int(11) NOT NULL COMMENT '等级',
+  `levelname` varchar(100) NOT NULL COMMENT '等级名称',
+  `level_money` decimal(10,2) DEFAULT '0.00' COMMENT '会员升级金额',
+  `discount` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '折扣',
+  `logo` varchar(255) DEFAULT NULL COMMENT '会员等级logo'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='会员等级表';
+
+ALTER TABLE `oscshop_lionfish_comshop_member_level`
+  ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `oscshop_lionfish_comshop_member_level`
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增id';
+
+
+V1.6.0
+
+ALTER TABLE `oscshop_lionfish_comshop_goods_tags` ADD `type` TINYINT(1) NULL DEFAULT '0' COMMENT '类型：0文字 1图片' AFTER `tagname`;
+
+ALTER TABLE `oscshop_lionfish_comshop_good_common` ADD `print_sub_title` VARCHAR(200) NULL COMMENT '商品打印简短标题' AFTER `share_title`;
+
+
+V1.5.0
+
+CREATE TABLE IF NOT EXISTS `oscshop_lionfish_comshop_perm_role` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `rolename` varchar(255) DEFAULT '',
+  `status` tinyint(3) DEFAULT '0',
+  `perms` text,
+  `deleted` tinyint(3) DEFAULT '0',
+  `perms2` text,
+  PRIMARY KEY (`id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_deleted` (`deleted`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
+
+
+CREATE TABLE IF NOT EXISTS `oscshop_lionfish_comshop_perm_user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uniacid` int(11) DEFAULT '0',
+  `uid` int(11) DEFAULT '0',
+  `username` varchar(255) DEFAULT '',
+  `password` varchar(255) DEFAULT '',
+  `roleid` int(11) DEFAULT '0',
+  `status` int(11) DEFAULT '0',
+  `perms` text,
+  `deleted` tinyint(3) DEFAULT '0',
+  `realname` varchar(255) DEFAULT '',
+  `mobile` varchar(255) DEFAULT '',
+  `perms2` text,
+  `openid` varchar(50) DEFAULT NULL,
+  `openid_wa` varchar(50) DEFAULT NULL,
+  `member_nick` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_uniacid` (`uniacid`),
+  KEY `idx_uid` (`uid`),
+  KEY `idx_roleid` (`roleid`),
+  KEY `idx_status` (`status`),
+  KEY `idx_deleted` (`deleted`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
+
+ALTER TABLE  `oscshop_seller` ADD  `roleid` INT( 11 ) NULL COMMENT  '角色id',
+ADD  `perms` TEXT NULL COMMENT  '权限',
+ADD  `deleted` TINYINT( 1 ) NULL DEFAULT  '0' COMMENT  '是否禁用';
+
+ALTER TABLE `oscshop_seller` DROP `we_hexiao_qrcode`;
+
+ALTER TABLE `oscshop_seller`
+  DROP `s_logo`,
+  DROP `s_banner`,
+  DROP `certification`,
+  DROP `s_descript`,
+  DROP `s_qrcode`,
+  DROP `s_telephone`,
+  DROP `s_qq`,
+  DROP `s_weixin`,
+  DROP `s_alipay`,
+  DROP `s_cardrealname`,
+  DROP `s_cardname`,
+  DROP `s_cardnumber`,
+  DROP `s_email`,
+  DROP `s_is_super`,
+  DROP `roleid`;
+
+
+
+ALTER TABLE `oscshop_lionfish_comshop_good_common` ADD `is_take_fullreduction` TINYINT(1) NULL DEFAULT '1' COMMENT '是否参加满减' AFTER `goods_share_image`;
+ALTER TABLE `oscshop_lionfish_comshop_order` ADD `fullreduction_money` FLOAT(10,2) NULL DEFAULT '0' COMMENT '满减金额' AFTER `voucher_credit`;
+
+ALTER TABLE `oscshop_lionfish_community_head_tixian_order` ADD `is_send_fail` TINYINT(1) NULL DEFAULT '0' COMMENT '是否发送是否，1是，0否' AFTER `shentime`, ADD `fail_msg` VARCHAR(255) NULL COMMENT '发送失败原因' AFTER `is_send_fail`;
+
+
+优惠券3张表，待导入
+
+V1.4.1
+
+ALTER TABLE `oscshop_lionfish_comshop_order` CHANGE `delivery` `delivery` ENUM('express','pickup','tuanz_send') CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'express' COMMENT '配送类型';
+ALTER TABLE `oscshop_lionfish_comshop_order` ADD `tuan_send_address` VARCHAR(255) NULL COMMENT '团长配送，送货详细地址' AFTER `shipping_address`;
+ALTER TABLE `oscshop_lionfish_community_head_commiss_order` ADD `add_shipping_fare` FLOAT(10,2) NULL DEFAULT '0' COMMENT '团长配送费' AFTER `money`;
+ALTER TABLE `oscshop_lionfish_comshop_notify_order` CHANGE `state` `state` INT(10) NOT NULL COMMENT '状态，0未发送，1已发送';
+
+CREATE TABLE IF NOT EXISTS `oscshop_lionfish_comshop_navigat` (
+  `id` int(11) NOT NULL COMMENT '自增id',
+  `advname` varchar(200) NOT NULL COMMENT '名称',
+  `thumb` varchar(255) NOT NULL COMMENT '图片地址',
+  `link` varchar(255) NOT NULL COMMENT '链接地址',
+  `appid` varchar(255) NOT NULL COMMENT '外部小程序appid',
+  `type` tinyint(1) NOT NULL COMMENT '0外链 1小程序内链 2外部小程序',
+  `displayorder` int(10) NOT NULL COMMENT '排序，越大排序越前面',
+  `enabled` tinyint(1) NOT NULL COMMENT '是否生效，1生效，0不生效',
+  `addtime` int(10) NOT NULL COMMENT '添加广告时间'
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='导航图标';
+
+ALTER TABLE `oscshop_lionfish_comshop_navigat`
+  ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `oscshop_lionfish_comshop_navigat`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增id',AUTO_INCREMENT=1;
+
+ALTER TABLE `oscshop_lionfish_community_head` ADD `wechat` VARCHAR(100) NULL DEFAULT NULL COMMENT '微信号' AFTER `head_mobile`;
+
+ALTER TABLE `oscshop_lionfish_comshop_adv` ADD `appid` VARCHAR(255) NULL DEFAULT NULL COMMENT '外部小程序appid' AFTER `link`, ADD `linktype` TINYINT(1) NOT NULL DEFAULT '1' COMMENT '0外链 1小程序内 2外部小程序' AFTER `appid`;
+
+ALTER TABLE `oscshop_lionfish_comshop_navigat` CHANGE `advname` `navname` VARCHAR(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '名称';
+
+//快递整个表等待导出：
+
+V1.2.2
+
+ALTER TABLE `oscshop_lionfish_community_head` ADD `enable` TINYINT(1) NULL DEFAULT '1' COMMENT '禁用状态 0：禁用 1：启用' AFTER `state`;
+ALTER TABLE `oscshop_lionfish_comshop_supply` ADD `member_id` INT(10) NULL DEFAULT '0' COMMENT '关联会员id' AFTER `name`;
+ALTER TABLE `oscshop_lionfish_comshop_order` ADD `is_delivery_flag` TINYINT(1) NULL DEFAULT '0' COMMENT '是否已经打包' AFTER `is_zhuli`;
+ALTER TABLE`oscshop_lionfish_comshop_good_common` ADD `big_img` VARCHAR(255) NULL DEFAULT NULL COMMENT '首页列表大图' AFTER `content`;
+ALTER TABLE `oscshop_lionfish_comshop_good_common` ADD `goods_share_image` VARCHAR(255) NULL COMMENT '商品分享图' AFTER `big_img`;
+
+
+V1.3.3
+
+CREATE TABLE `oscshop_lionfish_comshop_deliveryclerk` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `uniacid` int(10) NOT NULL COMMENT '公众号id',
+  `line_id` int(10) NOT NULL COMMENT '线路id',
+  `name` varchar(100) NOT NULL COMMENT '配送员名称',
+  `logo` varchar(255) DEFAULT NULL COMMENT '头像',
+  `mobile` varchar(50) NOT NULL COMMENT '配送员手机号',
+  `addtime` int(10) NOT NULL COMMENT '添加时间',
+  PRIMARY KEY (`id`),
+  KEY `uniacid` (`uniacid`,`line_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='狮子鱼社区团购配送员表';
+
+CREATE TABLE `oscshop_lionfish_comshop_deliveryline` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `uniacid` int(10) NOT NULL COMMENT '公众号id',
+  `name` varchar(255) NOT NULL COMMENT '线路名称',
+  `clerk_id` int(10) NOT NULL COMMENT '配送员id',
+  `addtime` int(10) NOT NULL COMMENT '添加时间',
+  PRIMARY KEY (`id`),
+  KEY `uniacid` (`uniacid`,`clerk_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='狮子鱼社区团购配送线路';
+
+CREATE TABLE `oscshop_lionfish_comshop_deliveryline_headrelative` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `line_id` int(10) NOT NULL COMMENT '线路id',
+  `head_id` int(11) NOT NULL COMMENT '团长id',
+  `uniacid` int(10) NOT NULL COMMENT '公众号id',
+  `addtime` int(11) NOT NULL COMMENT '添加时间',
+  PRIMARY KEY (`id`),
+  KEY `uniacid` (`uniacid`,`line_id`),
+  KEY `head_id` (`head_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='狮子鱼社区团购线路团长关联表';
+
+CREATE TABLE `oscshop_lionfish_comshop_deliverylist` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `uniacid` int(10) NOT NULL COMMENT '公众号id',
+  `list_sn` varchar(50) NOT NULL COMMENT '编号',
+  `head_id` int(10) DEFAULT NULL COMMENT '团长id',
+  `head_name` varchar(100) NOT NULL COMMENT '团长名称',
+  `head_mobile` varchar(20) DEFAULT NULL COMMENT '团长手机',
+  `head_address` varchar(255) NOT NULL COMMENT '团长地址',
+  `line_id` int(10) NOT NULL COMMENT '线路id',
+  `line_name` varchar(200) DEFAULT NULL COMMENT '线路名称',
+  `clerk_id` int(10) DEFAULT NULL COMMENT '配送员id',
+  `clerk_name` varchar(100) DEFAULT NULL COMMENT '配送员名称',
+  `clerk_mobile` varchar(50) DEFAULT NULL COMMENT '配送员手机号',
+  `state` tinyint(1) NOT NULL COMMENT '配送状态：0未配送，1配送中，2已配送',
+  `goods_count` int(10) NOT NULL COMMENT '商品数量',
+  `express_time` int(10) NOT NULL COMMENT '配送时间',
+  `head_get_time` int(10) DEFAULT NULL COMMENT '清单配送到时间',
+  `create_time` int(10) NOT NULL COMMENT '创建清单时间',
+  `addtime` int(11) NOT NULL COMMENT '添加时间',
+  PRIMARY KEY (`id`),
+  KEY `uniacid` (`uniacid`,`line_id`),
+  KEY `clerk_id` (`clerk_id`),
+  KEY `head_id` (`head_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='狮子鱼社区团购清单表';
+
+
+CREATE TABLE `oscshop_lionfish_comshop_deliverylist_goods` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `uniacid` int(10) NOT NULL COMMENT '公众号id',
+  `list_id` int(10) NOT NULL COMMENT '清单id',
+  `goods_id` int(10) NOT NULL COMMENT '商品id',
+  `goods_name` varchar(255) NOT NULL COMMENT '商品标题',
+  `rela_goodsoption_valueid` varchar(100) NOT NULL COMMENT '商品规格',
+  `sku_str` varchar(255) DEFAULT NULL COMMENT '标签名称',
+  `goods_image` varchar(255) NOT NULL COMMENT '商品图片',
+  `addtime` int(10) NOT NULL COMMENT '添加时间',
+  `goods_count` int(10) NOT NULL COMMENT '商品数量',
+  PRIMARY KEY (`id`),
+  KEY `uniacid` (`uniacid`),
+  KEY `list_id` (`list_id`),
+  KEY `goods_id` (`goods_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='狮子鱼社区团购';
+
+
+CREATE TABLE `oscshop_lionfish_comshop_deliverylist_order` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `uniacid` int(10) NOT NULL COMMENT '公众号id',
+  `list_id` int(10) NOT NULL COMMENT '清单id',
+  `order_id` int(11) NOT NULL COMMENT '订单id',
+  `addtime` int(11) NOT NULL COMMENT '添加时间',
+  PRIMARY KEY (`id`),
+  KEY `uniacid` (`uniacid`,`list_id`),
+  KEY `order_id` (`order_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='狮子鱼社区团购清单订单关联表';
+
+ALTER TABLE `oscshop_lionfish_comshop_goods` ADD `istop` TINYINT(1) NULL DEFAULT '0' COMMENT '置顶 0否 1是' AFTER `addtime`, ADD `settoptime` INT(10) NULL DEFAULT '0' COMMENT '置顶时间' AFTER `istop`;
+
+ALTER TABLE `oscshop_lionfish_comshop_supply` ADD `product` VARCHAR(1000) NULL DEFAULT NULL COMMENT '产品说明' AFTER `logo`;
+
+
+CREATE TABLE `oscshop_lionfish_comshop_notify_order` (
+  `id` int(10) NOT NULL AUTO_INCREMENT,
+  `username` varchar(255) NOT NULL COMMENT '会员名称',
+  `member_id` int(10) DEFAULT '0',
+  `avatar` varchar(255) NOT NULL COMMENT '头像',
+  `order_time` int(10) NOT NULL COMMENT '购买时间',
+  `order_id` int(10) DEFAULT '0' COMMENT '订单id',
+  `state` tinyint(1) NOT NULL COMMENT '状态，0未发送，1已发送',
+  `add_time` int(10) NOT NULL COMMENT '添加时间',
+  `order_url` varchar(100) NOT NULL COMMENT '订单id',
+  PRIMARY KEY (`id`),
+  KEY `member_id` (`member_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='最新订单消息通知';
+
+ ALTER TABLE `oscshop_lionfish_comshop_member_charge_flow` ADD `operate_end_yuer` FLOAT(10,2) NULL DEFAULT '0' COMMENT '当前操作结束后余额' AFTER `money`;
+
+
+
+ V4.0.0.0
+
+
+
+ ALTER TABLE  `oscshop_lionfish_comshop_good_common` ADD  `is_new_buy` TINYINT( 1 ) NULL DEFAULT  '0' COMMENT  '是否新人购买，0否，1 是';
+
+
+
+ V4.3.0
+
+ ALTER TABLE `oscshop_lionfish_community_head_commiss_order` ADD `fen_type` TINYINT(1) NULL DEFAULT '0' COMMENT '0,按照比例计算的，1按照实际金额计算的' AFTER `type`;
+
+
+ CREATE TABLE `oscshop_lionfish_community_head_group`
+(
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`groupname` VARCHAR(255) NOT NULL COMMENT '分组名称' ,
+	PRIMARY KEY (`id`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城团长分组表';
+
+ALTER TABLE `oscshop_lionfish_community_head` ADD `groupid` INT(10) NULL DEFAULT '0' COMMENT '分组id' AFTER `head_mobile`;
+
+ALTER TABLE `oscshop_lionfish_comshop_order` ADD `is_print_suc` TINYINT(1) NULL DEFAULT '1' COMMENT '是否打印成功。' AFTER `is_delivery_flag`;
+
+
+V4.9.0
+
+
+ALTER TABLE `oscshop_lionfish_comshop_member` ADD `is_writecommiss_form` TINYINT(1) NULL DEFAULT '0' COMMENT '是否收集过表单' AFTER `full_user_name`, ADD `commiss_formcontent` TEXT NULL COMMENT '表单收集的内容' AFTER `is_writecommiss_form`;
+ALTER TABLE `oscshop_lionfish_comshop_good_common` ADD `video` VARCHAR(255) NULL COMMENT '商品视频' AFTER `big_img`;
+ALTER TABLE `oscshop_lionfish_comshop_member` ADD `commiss_qrcode` VARCHAR(255) NULL COMMENT '分销商二维码' AFTER `hexiao_qrcod`;
+
+
+V5.0.0
+ALTER TABLE `oscshop_lionfish_comshop_member` ADD `is_share_tj` TINYINT(1) NULL DEFAULT '0' COMMENT '是否分销条件中，分享成为' AFTER `is_writecommiss_form`;
+ALTER TABLE `oscshop_lionfish_comshop_order` ADD `is_commission` TINYINT(1) NULL DEFAULT '0' COMMENT '是否分销订单' AFTER `is_zhuli`;
+ALTER TABLE `oscshop_lionfish_comshop_member_commiss_order` ADD `type` TINYINT(1) NULL DEFAULT '1' COMMENT '1按照比例。2按照固定金额' AFTER `level`, ADD `bili` FLOAT(10,2) NULL DEFAULT '0' COMMENT '比例，如果是固定金额，那么这里就是固定金额' AFTER `type`;
+ALTER TABLE `oscshop_lionfish_supply_commiss_order` ADD `member_commiss_money` FLOAT(10,2) NULL DEFAULT '0' COMMENT '会员分销金额' AFTER `head_commiss_money`;
+ALTER TABLE `oscshop_lionfish_community_head` ADD `is_modify_shipping_method` TINYINT(1) NULL DEFAULT '0' COMMENT '0跟随系统，1，开启，2关闭' AFTER `apptime`, ADD `is_modify_shipping_fare` TINYINT(1) NULL DEFAULT '0' COMMENT '是否开启自定义运费' AFTER `is_modify_shipping_method`, ADD `shipping_fare` FLOAT(10,2) NULL DEFAULT '0' COMMENT '配送费' AFTER `is_modify_shipping_fare`;
+ALTER TABLE `oscshop_lionfish_comshop_coupon` ADD `limit_goods_list` TEXT NULL COMMENT '限制的商品id' AFTER `is_limit_goods_buy`;
+ALTER TABLE `oscshop_lionfish_comshop_coupon` ADD `goodscates` INT(10) NULL DEFAULT '0' COMMENT '限制商品分类使用' AFTER `limit_goods_list`;
+ALTER TABLE `oscshop_lionfish_comshop_coupon_list` ADD `limit_goods_list` TEXT NULL COMMENT '限制的商品id' AFTER `is_limit_goods_buy`;
+ALTER TABLE `oscshop_lionfish_comshop_coupon_list` ADD `goodscates` INT(10) NULL DEFAULT '0' COMMENT '限制商品分类使用' AFTER `limit_goods_list`;
+ALTER TABLE `oscshop_lionfish_comshop_order` ADD `is_free_shipping_fare` TINYINT(1) NULL DEFAULT '0' COMMENT '满金额减运费' AFTER `shipping_fare`, ADD `fare_shipping_free` FLOAT(10,2) NULL DEFAULT '0' COMMENT '满x减免运费' AFTER `is_free_shipping_fare`;
+ALTER TABLE `oscshop_lionfish_comshop_order_goods` ADD `fare_shipping_free` FLOAT(10,2) NULL DEFAULT '0' COMMENT '满x金额减运费' AFTER `shipping_fare`;
+ALTER TABLE `oscshop_lionfish_comshop_order` ADD `man_e_money` FLOAT(10,2) NULL DEFAULT '0' COMMENT '满多少' AFTER `fare_shipping_free`;
+
+
+
+V5.1.0
+
+ALTER TABLE `oscshop_lionfish_comshop_member_commiss` ADD `type` TINYINT(1) NULL DEFAULT '0' COMMENT '1余额，2 weixin，3alipay，4bank ' AFTER `dongmoney`;
+ALTER TABLE `oscshop_lionfish_comshop_member_tixian_order` ADD `type` TINYINT(1) NULL DEFAULT '0' COMMENT '1余额，2微信 3支付宝 4 银行卡' AFTER `shentime`, ADD `bankname` VARCHAR(255) NULL COMMENT '银行卡名称' AFTER `type`, ADD `bankaccount` VARCHAR(255) NULL COMMENT '卡号' AFTER `bankname`, ADD `bankusername` VARCHAR(255) NULL COMMENT '持卡人姓名' AFTER `bankaccount`;
+ALTER TABLE `oscshop_lionfish_comshop_good_common` ADD `is_spike_buy` TINYINT(1) NULL DEFAULT '0' COMMENT '是否限时秒杀，0不是，1是' AFTER `is_new_buy`;
+
+
+
+V5.2.0
+
+ALTER TABLE `oscshop_lionfish_comshop_order_goods` ADD `is_refund_state` TINYINT(1) NULL DEFAULT '0' COMMENT '是否退款，0未退款，1已退款' AFTER `rela_goodsoption_valueid`;
+ALTER TABLE `oscshop_lionfish_comshop_order_refund` ADD `order_goods_id` INT(10) NULL DEFAULT '0' COMMENT '退款子订单编号' AFTER `order_id`;
+ALTER TABLE `oscshop_lionfish_comshop_order_history` ADD `order_goods_id` INT(10) NULL DEFAULT '0' COMMENT '商品订单id' AFTER `order_id`;
+ALTER TABLE `oscshop_lionfish_comshop_order_history` ADD INDEX( `order_id`, `order_goods_id`);
+ALTER TABLE `oscshop_lionfish_comshop_order_refund_history` ADD `order_goods_id` INT(10) NULL DEFAULT '0' COMMENT '订单商品id' AFTER `order_id`;
+ALTER TABLE `oscshop_lionfish_comshop_member_charge_flow` ADD `order_goods_id` INT(10) NULL DEFAULT '0' COMMENT '订单商品id' AFTER `trans_id`;
+ALTER TABLE `oscshop_lionfish_comshop_good_common` ADD `is_modify_sendscore` TINYINT(1) NULL DEFAULT '0' COMMENT '是否自定义赠送积分' AFTER `is_spike_buy`, ADD `send_socre` INT(10) NULL DEFAULT '0' COMMENT '买一个商品赠送积分多少' AFTER `is_modify_sendscore`;
+ALTER TABLE `oscshop_lionfish_comshop_order` ADD `score_for_money` FLOAT(10,2) NULL DEFAULT '0' COMMENT '积分抵扣金额' AFTER `payment_code`;
+ALTER TABLE `oscshop_lionfish_comshop_order_goods` ADD `score_for_money` FLOAT(10,2) NULL DEFAULT '0' COMMENT '积分抵扣金额' AFTER `voucher_credit`;
+
+
+V5.4.0 V5.5.0
+
+CREATE TABLE IF NOT EXISTS `oscshop_lionfish_comshop_member_group` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `groupname` varchar(255) DEFAULT '',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+ALTER TABLE `oscshop_lionfish_comshop_member_tixian_order` ADD `service_charge` FLOAT(10,2) NULL DEFAULT '0' COMMENT '提现手续费比例' AFTER `money`;
+ALTER TABLE `oscshop_lionfish_comshop_member_tixian_order` ADD `service_charge_money` FLOAT(10,2) NULL DEFAULT '0' COMMENT '提现后实际到账金额' AFTER `service_charge`;
+
+ALTER TABLE `oscshop_lionfish_community_head_tixian_order` ADD `type` TINYINT(1) NULL DEFAULT '0' COMMENT '0 原系统参数，1 余额，2微信，3支付宝，4 银行卡' AFTER `fail_msg`, ADD `bankname` VARCHAR(100) NULL COMMENT '银行卡名称' AFTER `type`, ADD `bankaccount` VARCHAR(100) NULL COMMENT '卡号' AFTER `bankname`, ADD `bankusername` VARCHAR(100) NULL COMMENT '持卡人姓名' AFTER `bankaccount`;
+
+
+ V5.7.0
+ALTER TABLE `oscshop_lionfish_community_head_commiss` ADD `share_avatar` VARCHAR(200) NULL DEFAULT NULL COMMENT '团长群分享头像' AFTER `bankusername`, ADD `share_wxcode` VARCHAR(200) NULL DEFAULT NULL COMMENT '团长群分享二维码' AFTER `share_avatar`, ADD `share_title` VARCHAR(200) NULL DEFAULT NULL COMMENT '团长群分享标题' AFTER `share_wxcode`, ADD `share_desc` VARCHAR(255) NULL DEFAULT NULL COMMENT '团长群分享描述' AFTER `share_title`;
+
+V5.8.0
+
+CREATE TABLE `oscshop_lionfish_comshop_chargetype`
+(
+`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+`money` FLOAT(10,2) NOT NULL COMMENT '充值金额' ,
+`send_money` FLOAT(10,2) NOT NULL DEFAULT '0' COMMENT '赠送金额' ,
+`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+PRIMARY KEY (`id`), INDEX (`uniacid`)
+) ENGINE = InnoDB COMMENT = '会员充值选项表';
+
+ALTER TABLE `oscshop_lionfish_comshop_member_charge_flow` ADD `give_money` FLOAT(10,2) NULL DEFAULT '0' COMMENT '赠送金额' AFTER `money`;
+
+
+V6.0.0
+
+ALTER TABLE `oscshop_lionfish_comshop_coupon` ADD `is_index_alert` TINYINT(1) NULL DEFAULT '0' COMMENT '是否首页弹窗，0否，1是' AFTER `is_index_show`;
+ALTER TABLE `oscshop_lionfish_comshop_good_common` ADD `is_mb_level_buy` TINYINT(1) NULL DEFAULT '1' COMMENT '是否支持会员折扣购买' AFTER `is_spike_buy`;
+ALTER TABLE `oscshop_lionfish_comshop_order_refund` ADD `store_id` INT(10) NULL DEFAULT '0' COMMENT '供应商id' AFTER `order_id`;
+ALTER TABLE `oscshop_lionfish_comshop_order_refund` ADD `complaint_name` VARCHAR(255) NULL COMMENT '联系人姓名' AFTER `ref_mobile`;
+ALTER TABLE `oscshop_lionfish_comshop_order_refund_history` ADD `ref_id` INT(10) NULL COMMENT '退款记录id' AFTER `type`, ADD INDEX (`ref_id`);
+
+
+ALTER TABLE `oscshop_lionfish_comshop_special` ADD COLUMN `type`  tinyint(1) NULL DEFAULT 0 COMMENT '0单图 1图+商品' AFTER `enabled`;
+ALTER TABLE `oscshop_lionfish_comshop_special` ADD COLUMN `special_title`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '活动页面主题标题' AFTER `type`;
+ALTER TABLE `oscshop_lionfish_comshop_special` ADD COLUMN `special_cover`  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '活动页面主题图片' AFTER `special_title`;
+ALTER TABLE `oscshop_lionfish_comshop_special` ADD COLUMN `displayorder`  int(10) NULL DEFAULT 0 COMMENT '排序' AFTER `special_cover`;
+ALTER TABLE `oscshop_lionfish_comshop_special` ADD COLUMN `begin_time`  int(10) NOT NULL COMMENT '活动开始时间' AFTER `displayorder`;
+ALTER TABLE `oscshop_lionfish_comshop_special` ADD COLUMN `end_time`  int(10) NOT NULL COMMENT '活动结束时间' AFTER `begin_time`;
+ALTER TABLE `oscshop_lionfish_comshop_special` ADD COLUMN `addtime`  int(10) NOT NULL COMMENT '添加时间' AFTER `end_time`;
+
+ALTER TABLE `oscshop_lionfish_comshop_special` DROP COLUMN `description`;
+
+ALTER TABLE `oscshop_lionfish_comshop_order_refund` ADD `remarkrefund` VARCHAR(255) NULL COMMENT '管理员备注' AFTER `state`;
+
+CREATE TABLE `oscshop_lionfish_comshop_order_refund_disable` (
+`id` INT(10) NOT NULL COMMENT '自增id' ,
+`ref_id` INT(10) NOT NULL COMMENT '退款的id' ,
+`order_id` INT(10) NOT NULL COMMENT '订单id' ,
+`order_goods_id` INT(10) NOT NULL COMMENT '子订单id' ,
+`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+PRIMARY KEY (`id`),  INDEX (`ref_id`)
+) ENGINE = InnoDB COMMENT = '禁止申请退款的订单';
+
+ALTER TABLE `oscshop_lionfish_comshop_order_refund_disable` ADD INDEX( `order_id`, `order_goods_id`);
+ALTER TABLE `oscshop_lionfish_comshop_order_refund_disable` CHANGE `id` `id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id';
+ALTER TABLE `oscshop_lionfish_comshop_order_refund` ADD `modify_time` INT(10) NULL DEFAULT '0' COMMENT '退款订单管理员修改时间' AFTER `remarkrefund`;
+
+
+
+ALTER TABLE `oscshop_lionfish_comshop_supply` ADD `storename` VARCHAR(255) NOT NULL COMMENT '店铺名称' AFTER `logo`, ADD `banner` VARCHAR(255) NULL DEFAULT NULL COMMENT '店铺顶部图' AFTER `storename`;
+
+V6.1.0
+
+ALTER TABLE `oscshop_lionfish_comshop_good_common` ADD `is_only_express` TINYINT(1) NULL DEFAULT '0' COMMENT '是否仅快递' AFTER `send_socre`;
+
+
+V6.3.0
+
+ALTER TABLE `oscshop_lionfish_comshop_order_goods` ADD `is_statements_state` TINYINT(1) NULL DEFAULT '1' COMMENT '是否结算' AFTER `is_refund_state`;
+ALTER TABLE `oscshop_lionfish_comshop_order_goods` ADD `statements_end_time` INT(10) NULL DEFAULT '0' COMMENT '结算时间' AFTER `is_statements_state`;
+
+ALTER TABLE `oscshop_lionfish_comshop_special` ADD `is_index` TINYINT(1) NOT NULL DEFAULT '1' COMMENT '首页显示' AFTER `end_time`;
+ALTER TABLE `oscshop_lionfish_comshop_special` ADD `show_type` TINYINT(1) NOT NULL DEFAULT '0' COMMENT '0小图，1大图' AFTER `is_index`;
+
+ALTER TABLE `oscshop_lionfish_supply_tixian_order` ADD `supply_apply_type` TINYINT(1) NULL DEFAULT '0' COMMENT '供应商提现类型：0原来默认，1 微信 2 支付宝 3银行卡' AFTER `money`;
+
+
+V6.6.0
+
+ALTER TABLE `oscshop_lionfish_comshop_good_common` ADD `relative_goods_list` TEXT NULL COMMENT '关联的商品id' AFTER `is_only_express`;
+ALTER TABLE `oscshop_lionfish_comshop_order_refund` ADD `head_id` INT(10) NULL DEFAULT '0' COMMENT '团长id' AFTER `order_goods_id`, ADD INDEX (`head_id`);
+
+
+V6.7.0
+
+ALTER TABLE `oscshop_lionfish_comshop_good_common` ADD `is_show_arrive` TINYINT(1) NOT NULL DEFAULT '1' COMMENT '商品预达简介' AFTER `relative_goods_list`, ADD `diy_arrive_switch` TINYINT(1) NOT NULL DEFAULT '0' COMMENT '预达简介开关' AFTER `is_show_arrive`, ADD `diy_arrive_details` VARCHAR(200) NULL DEFAULT NULL COMMENT '预达简介内容' AFTER `diy_arrive_switch`;
+
+V6.8.0 V6.9.0
+
+ALTER TABLE `oscshop_lionfish_comshop_special` ADD `bg_color` VARCHAR(20) NOT NULL DEFAULT '#F6F6F6' COMMENT '背景颜色' AFTER `show_type`;
+
+
+
+ALTER TABLE `oscshop_lionfish_comshop_community_head_level` ADD `auto_upgrade` TINYINT(1) NULL DEFAULT '0' COMMENT '自动升级： 0 否，1 是' AFTER `commission`, ADD `condition_type` TINYINT(1) NULL COMMENT '0 . 累计社区用户完成订单总金额, 1 .累计社区用户数量' AFTER `auto_upgrade`, ADD `condition_one` FLOAT(10,2) NULL DEFAULT '0' COMMENT '累计社区用户完成订单总金额' AFTER `condition_type`, ADD `condition_two` INT(10) NULL DEFAULT '0' COMMENT '累计社区用户数量' AFTER `condition_one`;
+
+
+V7.1.0
+
+ALTER TABLE `oscshop_lionfish_comshop_adv` CHANGE `type` `type` ENUM('slider','nav','pintuan') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '广告类型，slider幻灯，nav导航小图';
+ALTER TABLE `oscshop_lionfish_comshop_goods_tags` ADD `tag_type` ENUM('normal','pintuan') NULL DEFAULT 'normal' COMMENT '商品标签类型' AFTER `type`;
+ALTER TABLE `oscshop_lionfish_comshop_spec` ADD `spec_type` ENUM('normal','pintuan') NULL DEFAULT 'normal' COMMENT '商品规格类型，普通，拼团' AFTER `value`;
+ALTER TABLE `oscshop_lionfish_comshop_goods_category` ADD `cate_type` ENUM('normal','pintuan') NULL DEFAULT 'normal' COMMENT '普通商品分类：normal,拼团商品。pintuan' AFTER `sort_order`;
+
+
+V7.2.0
+ALTER TABLE `oscshop_lionfish_comshop_order_comment` ADD `gd_type` ENUM('normal','pintuan') NULL DEFAULT 'normal' COMMENT 'normal普通商品。pintuan 拼团商品' AFTER `type`;
+ALTER TABLE `oscshop_lionfish_comshop_goods_category` ADD `banner` VARCHAR(255) NULL DEFAULT NULL COMMENT '顶部主题图' AFTER `logo`;
+
+
+V7.3.0
+
+ALTER TABLE `oscshop_lionfish_comshop_goods_category` ADD `is_show_topic` TINYINT(1) NOT NULL DEFAULT '0' COMMENT '是否显示3*3布局' AFTER `is_show`;
+
+
+V7.4.0
+CREATE TABLE `oscshop_lionfish_comshop_pin` (
+  `pin_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '拼团id，自增',
+  `order_id` int(11) NOT NULL DEFAULT '0' COMMENT '订单id',
+  `user_id` int(11) NOT NULL DEFAULT '0' COMMENT '会员id',
+  `need_count` int(11) NOT NULL DEFAULT '0' COMMENT '拼团人数',
+  `state` tinyint(1) NOT NULL DEFAULT '0' COMMENT '拼团状态，0拼团中，1拼团成功，2拼团失败并退款',
+  `lottery_state` tinyint(1) NOT NULL DEFAULT '0' COMMENT '抽奖状态，0抽奖中，1可退款，2已退款送券。',
+  `is_lottery` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否抽奖拼团，0正常订单，1抽奖订单',
+  `begin_time` int(11) NOT NULL COMMENT '拼团开始时间',
+  `end_time` int(11) NOT NULL COMMENT '拼团结束时间',
+  `add_time` int(11) NOT NULL COMMENT ' 添加时间',
+  `success_time` int(10) DEFAULT NULL COMMENT '拼团成功时间',
+  `is_jiqi` tinyint(1) DEFAULT '0' COMMENT '是否机器人成团',
+  `qrcode` varchar(255) DEFAULT NULL COMMENT '二维码',
+  PRIMARY KEY (`pin_id`),
+  KEY `user_id` (`user_id`) USING BTREE,
+  KEY `order_id` (`order_id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `oscshop_lionfish_comshop_pin_order` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `pin_id` int(11) NOT NULL COMMENT '拼团id',
+  `order_id` int(11) NOT NULL COMMENT '订单id',
+  `add_time` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `pin_id` (`pin_id`) USING BTREE,
+  KEY `order_id` (`order_id`) USING BTREE
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+V7.5.0
+
+ALTER TABLE `oscshop_lionfish_comshop_goods` ADD `costprice` FLOAT(10,2) NULL DEFAULT '0' COMMENT '成本价' AFTER `price`;
+
+
+V7.6.0
+
+
+ALTER TABLE `oscshop_lionfish_comshop_order` CHANGE `type` `type` ENUM('pintuan','normal','lottery','virtual','bargain','integral','community','ignore') CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT 'normal';
+ALTER TABLE `oscshop_lionfish_comshop_coupon` ADD `is_new_man` TINYINT(1) NULL DEFAULT '0' COMMENT '是否新人券，0非，1新人' AFTER `is_index_alert`;
+
+ALTER TABLE `oscshop_lionfish_comshop_good_pin` ADD `is_commiss_tuan` TINYINT(1) NULL DEFAULT '0' COMMENT '是否佣金团，0否，1是' AFTER `end_time`, ADD `is_zero_open` TINYINT(1) NULL DEFAULT '0' COMMENT '是否0元开团：0否，1是' AFTER `is_commiss_tuan`, ADD `is_newman` TINYINT(1) NULL DEFAULT '0' COMMENT '是否仅新人参加：0否，1是' AFTER `is_zero_open`, ADD `commiss_type` TINYINT(1) NULL DEFAULT '0' COMMENT '0百分比，1固定金额' AFTER `is_newman`;
+ALTER TABLE `oscshop_lionfish_comshop_good_pin` ADD `commiss_money` FLOAT(10,2) NULL DEFAULT '0' COMMENT '具体佣金比例或佣金' AFTER `commiss_type`;
+
+CREATE TABLE `oscshop_lionfish_comshop_pintuan_commiss` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `uniacid` int(10) NOT NULL COMMENT '公众号id',
+  `member_id` int(10) NOT NULL COMMENT '会员ID',
+  `money` float(10,2) DEFAULT '0.00' COMMENT '可提现金额',
+  `dongmoney` float(10,2) DEFAULT '0.00' COMMENT '提现中金额',
+  `getmoney` float(10,2) DEFAULT '0.00' COMMENT '已提现金额',
+  PRIMARY KEY (`id`),
+  KEY `member_id` (`member_id`) USING BTREE,
+  KEY `uniacid` (`uniacid`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `oscshop_lionfish_comshop_pintuan_commiss_order` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `uniacid` int(11) NOT NULL COMMENT '公众号id',
+  `member_id` int(10) NOT NULL COMMENT '会员ID',
+  `order_id` int(10) NOT NULL COMMENT '订单ID',
+  `order_goods_id` int(10) DEFAULT '0' COMMENT '商品订单id',
+  `type` tinyint(1) DEFAULT '1' COMMENT '1按照比例。2按照固定金额',
+  `bili` float(10,2) DEFAULT '0.00' COMMENT '比例，如果是固定金额，那么这里就是固定金额',
+  `store_id` int(10) NOT NULL COMMENT '店铺ID',
+  `state` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否结算：0，待计算。1，已结算。2，订单取消\r\n3、已打款',
+  `money` float(10,2) NOT NULL DEFAULT '0.00' COMMENT '分佣金额',
+  `addtime` int(10) NOT NULL COMMENT '添加时间',
+  PRIMARY KEY (`id`),
+  KEY `member_id` (`member_id`) USING BTREE,
+  KEY `uniacid` (`uniacid`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `oscshop_lionfish_comshop_pintuan_tixian_order` (
+  `id` int(10) NOT NULL AUTO_INCREMENT COMMENT '自增id',
+  `uniacid` int(10) NOT NULL,
+  `member_id` int(10) NOT NULL COMMENT '会员id',
+  `money` float(10,2) NOT NULL COMMENT '提现金额',
+  `service_charge` float(10,2) DEFAULT '0.00' COMMENT '提现手续费比例',
+  `service_charge_money` float(10,2) DEFAULT '0.00' COMMENT '提现后实际到账金额',
+  `state` tinyint(1) NOT NULL COMMENT '提现状态，0申请中，1提现成功，2体现失败',
+  `shentime` int(10) NOT NULL COMMENT '审核时间',
+  `type` tinyint(1) DEFAULT '0' COMMENT '1余额，2微信 3支付宝 4 银行卡',
+  `bankname` varchar(255) DEFAULT NULL COMMENT '银行卡名称',
+  `bankaccount` varchar(255) DEFAULT NULL COMMENT '卡号',
+  `bankusername` varchar(255) DEFAULT NULL COMMENT '持卡人姓名',
+  `addtime` int(10) NOT NULL COMMENT '提交时间',
+  PRIMARY KEY (`id`),
+  KEY `uniacid` (`uniacid`),
+  KEY `member_id` (`member_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='分销佣金提现表';
+
+ALTER TABLE `oscshop_lionfish_comshop_pin` ADD `is_commiss_tuan` TINYINT(1) NULL DEFAULT '0' COMMENT '是否佣金团' AFTER `state`, ADD `is_newman_takein` TINYINT(1) NULL DEFAULT '0' COMMENT '是否仅新人参加' AFTER `is_commiss_tuan`;
+
+
+ALTER TABLE `oscshop_lionfish_comshop_pintuan_commiss_order` ADD `statement_time` INT(10) NULL DEFAULT '0' COMMENT '结算时间' AFTER `money`;
+
+
+V7.7.0
+
+CREATE TABLE `oscshop_lionfish_comshop_member_card` (
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`cardname` VARCHAR(255) NOT NULL COMMENT '会员卡名称' ,
+	`orignprice` FLOAT(10,2) NOT NULL COMMENT '原价' ,
+	`price` FLOAT(10,2) NOT NULL COMMENT '实际购买价格' ,
+	`expire_day` FLOAT(10,2) NOT NULL COMMENT '有效期天数，支持小数点' ,
+	`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+	PRIMARY KEY (`id`), INDEX (`uniacid`)
+) ENGINE = InnoDB COMMENT = '付费会员卡表';
+
+CREATE TABLE `oscshop_lionfish_comshop_member_card_order` (
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`order_sn` VARCHAR(50) NOT NULL COMMENT '订单编号' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`member_id` INT(10) NOT NULL COMMENT '会员id' ,
+	`pay_type` ENUM('weixin','yuer') NOT NULL COMMENT '支付类型，微信，余额' ,
+	`state` TINYINT(1) NOT NULL DEFAULT '0' COMMENT '支付状态：0未支付，1已支付' ,
+	`car_id` INT(10) NOT NULL COMMENT '购买的 会员卡id' ,
+	`expire_day` FLOAT(10,2) NOT NULL COMMENT '有效期天数，支持小数点' ,
+	`price` FLOAT(10,2) NOT NULL COMMENT '购买价格' ,
+	`order_type` TINYINT(1) NULL DEFAULT '1' COMMENT '购买类型：1首次购买，2有效期内续期，3过期后续费' ,
+	`begin_time` INT(10) NULL DEFAULT '0' COMMENT '有效期开始时间' ,
+	`end_time` INT(10) NOT NULL DEFAULT '0' COMMENT '有效期截止时间点' ,
+	`pay_time` INT(10) NULL DEFAULT '0' COMMENT '支付的时间点' ,
+	`addtime` INT(10) NOT NULL COMMENT '下单的时间' ,
+	PRIMARY KEY (`id`), INDEX (`order_sn`), INDEX (`uniacid`), INDEX (`member_id`), INDEX (`car_id`)
+) ENGINE = InnoDB COMMENT = '付费会员卡 购买订单表';
+
+CREATE TABLE `oscshop_lionfish_comshop_member_card_equity` (
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`equity_name` VARCHAR(255) NOT NULL COMMENT '权益名称' ,
+	`image` VARCHAR(255) NOT NULL COMMENT '权益图标' ,
+	`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+	PRIMARY KEY (`id`), INDEX (`uniacid`)
+) ENGINE = InnoDB COMMENT = '会员卡权益';
+
+
+ALTER TABLE `oscshop_lionfish_comshop_member` ADD `card_id` INT(10) NULL DEFAULT '0' COMMENT '会员卡id' AFTER `commiss_formcontent`, ADD `card_begin_time` INT(10) NULL DEFAULT '0' COMMENT '会员卡开始时间' AFTER `card_id`, ADD `card_end_time` INT(10) NULL DEFAULT '0' COMMENT '会员卡结束时间' AFTER `card_begin_time`;
+
+ALTER TABLE `oscshop_lionfish_comshop_goods` ADD `card_price` FLOAT(10,2) NULL DEFAULT '0' COMMENT '会员卡商品购买价格' AFTER `costprice`;
+ALTER TABLE `oscshop_lionfish_comshop_goods_option_item_value` ADD `card_price` FLOAT(10,2) NULL DEFAULT '0' COMMENT '会员卡购买价格' AFTER `pinprice`;
+ALTER TABLE `oscshop_lionfish_comshop_member_card_order` ADD `formid` VARCHAR(255) NULL COMMENT '支付formid' AFTER `car_id`;
+ALTER TABLE `oscshop_lionfish_comshop_member_card_order` ADD `trans_id` VARCHAR(255) NULL COMMENT '微信交易单号' AFTER `car_id`;
+
+V7.8.0
+
+ALTER TABLE `oscshop_lionfish_comshop_goods` ADD `is_take_vipcard` TINYINT(1) NULL DEFAULT '0' COMMENT '是否参加会员卡，1参加，0不参加' AFTER `card_price`;
+ALTER TABLE `oscshop_lionfish_comshop_order_goods` ADD `is_vipcard_buy` TINYINT(1) NULL DEFAULT '0' COMMENT '0非vip价格购买，1是' AFTER `total`, ADD `old_total` FLOAT(10,2) NULL DEFAULT '0' COMMENT '原始总价' AFTER `is_vipcard_buy`;
+ALTER TABLE `oscshop_lionfish_comshop_order` ADD `is_vipcard_buy` TINYINT(1) NULL DEFAULT '0' COMMENT '是否会员卡购买，0 否，1是' AFTER `supply_id`;
+
+
+
+V8.0.0
+
+CREATE TABLE `oscshop_lionfish_comshop_cube` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`name` VARCHAR(255) NOT NULL COMMENT '名称' ,
+	`thumb` TEXT NOT NULL COMMENT '图片' ,
+	`link` VARCHAR(255) NOT NULL COMMENT '链接地址' ,
+	`appid` VARCHAR(255) NULL DEFAULT NULL COMMENT '外部小程序appid' ,
+	`type` TINYINT(2) NOT NULL DEFAULT '0' COMMENT '类型' ,
+	`displayorder` INT(10) NOT NULL COMMENT '排序，越大排序越前面' ,
+	`enabled` TINYINT(1) NOT NULL COMMENT '是否生效，1生效，0不生效' ,
+	`linktype` TINYINT(1) NOT NULL COMMENT '0外链 1小程序内 2外部小程序' ,
+	`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+	PRIMARY KEY (`id`)
+) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci COMMENT = '魔方图片';
+
+
+
+V8.1.0
+
+ALTER TABLE `oscshop_lionfish_comshop_cube` CHANGE `link` `num` TINYINT(1) NOT NULL COMMENT '图片个数';
+ALTER TABLE `oscshop_lionfish_comshop_order_all` ADD `out_trade_no` VARCHAR(100) NULL DEFAULT '' COMMENT '提交给微信的订单号' AFTER `transaction_id`;
+
+
+
+V8.3.0
+
+CREATE TABLE `oscshop_lionfish_comshop_signinreward_record` (
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`member_id` INT(10) NOT NULL COMMENT '会员id' ,
+	`continuity_day` INT(10) NOT NULL COMMENT '连续签到几天' ,
+	`reward_socre` INT(10) NOT NULL COMMENT '赠送积分数量' ,
+	`signin_time` INT(10) NOT NULL COMMENT '签到时间' ,
+	`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+	PRIMARY KEY (`id`), INDEX (`uniacid`, `member_id`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城签到奖励记录表';
+
+ALTER TABLE `oscshop_lionfish_comshop_member_integral_flow` CHANGE `type` `type` ENUM('goodsbuy','refundorder','system_add','system_del','orderbuy','signin_send') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '积分获赠/减少 类型';
+
+
+
+
+V8.4.0
+
+
+ALTER TABLE `oscshop_lionfish_comshop_adv` CHANGE `type` `type` ENUM('slider','nav','pintuan','recipe') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '广告类型，slider幻灯，nav导航小图';
+ALTER TABLE `oscshop_lionfish_comshop_goods_category` CHANGE `cate_type` `cate_type` ENUM('normal','pintuan','recipe') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'normal' COMMENT '普通商品分类：normal,拼团商品。pintuan';
+
+CREATE TABLE `oscshop_lionfish_comshop_recipe`
+(
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`recipe_name` VARCHAR(255) NOT NULL COMMENT '菜谱名称' ,
+	`sub_name` VARCHAR(255) NULL COMMENT '菜谱描述' ,
+	`images` VARCHAR(255) NULL COMMENT '菜谱图片' ,
+	`video` VARCHAR(255) NULL COMMENT '菜谱视频' ,
+	`member_id` INT(10) NOT NULL COMMENT '会员id' ,
+	`cate_id` INT(10) NOT NULL COMMENT '分类id' ,
+	`make_time` VARCHAR(100) NULL COMMENT '制作时间' ,
+	`diff_type` TINYINT(1) NOT NULL COMMENT '难易程度，1简单，2容易，3困难' ,
+	`state` TINYINT(1) NULL COMMENT '0禁用，1启用' ,
+	`content` TEXT NOT NULL COMMENT '菜谱内容' ,
+	`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+	PRIMARY KEY (`id`), INDEX (`uniacid`), INDEX (`cate_id`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城菜谱表';
+
+CREATE TABLE `oscshop_lionfish_comshop_recipe_ingredients`
+(
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`recipe_id` INT(10) NOT NULL COMMENT '菜谱id' ,
+	`goods_id` INT(10) NOT NULL COMMENT '商品id' ,
+	`title` VARCHAR(255) NOT NULL COMMENT '食材标题' ,
+	`addtime` INT(10) NOT NULL COMMENT '添加时间' , PRIMARY KEY (`id`), INDEX (`uniacid`), INDEX (`recipe_id`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城食材表';
+
+
+
+V8.5.0
+
+ALTER TABLE `oscshop_lionfish_comshop_recipe` ADD `fav_count` INT(10) NULL DEFAULT '0' COMMENT '喜欢数' AFTER `state`;
+
+CREATE TABLE `oscshop_lionfish_comshop_recipe_fav`
+(
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`recipe_id` INT(10) NOT NULL COMMENT '菜谱id' ,
+	`member_id` INT(10) NOT NULL COMMENT '会员id' ,
+	`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+	PRIMARY KEY (`id`), INDEX (`uniacid`), INDEX (`recipe_id`), INDEX (`member_id`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城菜谱喜欢表';
+
+
+V8.6.0
+
+ALTER TABLE `oscshop_lionfish_comshop_recipe_ingredients` CHANGE `goods_id` `goods_id` VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '商品id,字符串多个逗号隔开 .';
+
+V8.7.0
+
+ALTER TABLE `oscshop_lionfish_comshop_order_goods` ADD `is_level_buy` TINYINT(1) NULL DEFAULT '0' COMMENT '是否会员等级购买，1是，0 不是' AFTER `is_vipcard_buy`;
+ALTER TABLE `oscshop_lionfish_comshop_order` ADD `is_level_buy` TINYINT(1) NULL DEFAULT '0' COMMENT '是否会员等级购买，1是，0 不是' AFTER `is_vipcard_buy`;
+
+
+V8.8.0
+
+ALTER TABLE `oscshop_lionfish_comshop_goods` ADD `is_seckill` TINYINT(1) NULL DEFAULT '0' COMMENT '是否秒杀商品，1是，0否' AFTER `is_index_show`;
+
+V8.9.0
+
+ALTER TABLE `oscshop_lionfish_comshop_goods` CHANGE `type` `type` ENUM('normal','pin','lottery','oldman','newman','commiss','ladder','flash','spike','integral') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'normal' COMMENT '商品类型';
+ALTER TABLE `oscshop_lionfish_comshop_member_integral_flow` CHANGE `type` `type` ENUM('goodsbuy','refundorder','system_add','system_del','orderbuy','signin_send','integral_exchange') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '积分获赠/减少 类型';
+ALTER TABLE  `oscshop_lionfish_comshop_order_goods` ADD INDEX (  `goods_id` ,  `rela_goodsoption_valueid` ) ;
+
+
+
+V9.2.0
+
+CREATE TABLE `oscshop_lionfish_comshop_solitaire` (
+`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+`head_id` INT(10) NOT NULL COMMENT '团长id' ,
+`solitaire_name` VARCHAR(255) NOT NULL COMMENT '接龙名称' ,
+`images_list` TEXT NULL COMMENT '图片列表' ,
+`addtype` TINYINT(1) NOT NULL DEFAULT '0' COMMENT '0平台添加，1团长添加' ,
+`state` TINYINT(1) NOT NULL DEFAULT '0' COMMENT '0未审核，1已审核' ,
+`begin_time` INT(10) NOT NULL COMMENT '开始时间' ,
+`end_time` INT(10) NOT NULL COMMENT '结束时间' ,
+`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+`content` TEXT NULL COMMENT '内容' ,
+PRIMARY KEY (`id`), INDEX (`uniacid`), INDEX (`head_id`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城群接龙活动表';
+
+CREATE TABLE `oscshop_lionfish_comshop_solitaire_goods` (
+`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+`soli_id` INT(10) NOT NULL COMMENT '群接龙id' ,
+`goods_id` INT(10) NOT NULL COMMENT '商品id' ,
+`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+PRIMARY KEY (`id`), INDEX (`uniacid`, `soli_id`),
+INDEX (`goods_id`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城接龙活动商品表';
+
+
+CREATE TABLE `oscshop_lionfish_comshop_templatemsg`
+(
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`template_data` TEXT NOT NULL COMMENT '发送数据' ,
+	`url` VARCHAR(255) NULL COMMENT '点击url' ,
+	`open_id` VARCHAR(255) NOT NULL COMMENT 'openid' ,
+	`template_id` VARCHAR(255) NOT NULL COMMENT '模板id' ,
+	`type` TINYINT(1) NOT NULL COMMENT '0 非群发，1 发送给所有人' ,
+	`state` TINYINT(1) NOT NULL COMMENT '0未发送状态，1已发送' ,
+	`total_count` INT(10) NULL COMMENT '一共多少条' ,
+	`send_total_count` INT(10) NULL DEFAULT '0' COMMENT '已经发送了多少条' ,
+	`addtime` INT NOT NULL ,
+	 PRIMARY KEY (`id`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城群发模板消息';
+
+
+V9.3.0
+
+ALTER TABLE `oscshop_lionfish_comshop_solitaire` ADD `appstate` TINYINT(1) NULL DEFAULT '1' COMMENT '是否审核，1审核，0未审核' AFTER `state`;
+
+CREATE TABLE `oscshop_lionfish_comshop_solitaire_order` (
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`soli_id` INT(10) NOT NULL COMMENT '群接龙id' ,
+	`order_id` INT(10) NOT NULL COMMENT '订单id' ,
+	`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+	PRIMARY KEY (`id`),
+	INDEX (`uniacid`, `soli_id`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城群接龙订单表';
+
+
+CREATE TABLE `oscshop_lionfish_comshop_solitaire_invite` (
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`soli_id` INT(10) NOT NULL COMMENT '群接龙id' ,
+	`member_id` INT(10) NOT NULL COMMENT '会员id' ,
+	`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+	PRIMARY KEY (`id`),
+	INDEX (`uniacid`),
+	INDEX (`soli_id`, `member_id`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城群接龙访问记录表';
+
+ALTER TABLE `oscshop_lionfish_community_head` ADD `is_default` TINYINT(1) NULL DEFAULT '0' COMMENT '0非默认，1 默认，只有开启单团长模式下可用' AFTER `rest`;
+
+
+V9.4.0
+
+CREATE TABLE `oscshop_lionfish_comshop_solitaire_post` (
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`soli_id` INT(10) NOT NULL COMMENT '群接龙id' ,
+	`member_id` INT(10) NOT NULL COMMENT '会员id' ,
+	`pid` INT(10) NOT NULL DEFAULT '0' COMMENT '回复id，默认0' ,
+	`fav_count` INT(10) NOT NULL COMMENT '点赞数' ,
+	`content` TEXT NOT NULL COMMENT '评论内容' ,
+	`addtime` INT(10) NOT NULL COMMENT '评论时间' ,
+	PRIMARY KEY (`id`), INDEX (`uniacid`, `soli_id`), INDEX (`pid`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城群接龙评论表';
+
+
+CREATE TABLE `oscshop_lionfish_comshop_solitaire_post_fav` (
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`member_id` INT(10) NOT NULL COMMENT '会员id' ,
+	`soli_id` INT(10) NOT NULL COMMENT '群接龙id' ,
+	`post_id` INT(10) NOT NULL COMMENT '评论id' ,
+	`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+	PRIMARY KEY (`id`), INDEX (`member_id`, `post_id`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城群接龙点赞表';
+
+
+
+V9.5.0
+
+ALTER TABLE `oscshop_lionfish_comshop_solitaire` ADD `qrcode_image` VARCHAR(255) NULL COMMENT '接龙二维码' AFTER `content`;
+ALTER TABLE `oscshop_lionfish_comshop_order` ADD `soli_id` INT(10) NULL COMMENT '接龙id' AFTER `is_zhuli`;
+ALTER TABLE `oscshop_lionfish_comshop_order` ADD INDEX(`soli_id`);
+ALTER TABLE `oscshop_lionfish_comshop_special` CHANGE `goodsids` `goodsids` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '商品id';
+
+V9.6.0
+ALTER TABLE `oscshop_lionfish_comshop_good_common` ADD `is_limit_levelunbuy` TINYINT(1) NULL DEFAULT '0' COMMENT '默认等级不能买' AFTER `is_new_buy`;
+ALTER TABLE `oscshop_lionfish_comshop_solitaire` ADD `end` TINYINT(1) NULL DEFAULT '0' COMMENT '手动结束' AFTER `content`;
+
+
+V9.9.0
+
+ALTER TABLE `oscshop_lionfish_comshop_good_common` ADD `is_limit_vipmember_buy` TINYINT(1) NULL DEFAULT '0' COMMENT '非VIP 不能购买' AFTER `is_limit_levelunbuy`;
+
+CREATE TABLE `oscshop_lionfish_comshop_subscribe` (
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`member_id` INT(10) NOT NULL COMMENT '会员id' ,
+	`template_id` VARCHAR(255) NOT NULL COMMENT '模板' ,
+	`type` ENUM('pay_order','send_order','hexiao_success','apply_community','open_tuan','take_tuan','pin_tuansuccess','apply_tixian') NOT NULL COMMENT '消息类型' ,
+	`addtime` INT(10) NOT NULL COMMENT '订阅时间' ,
+	PRIMARY KEY (`id`), INDEX (`uniacid`), INDEX (`member_id`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城用户订阅消息';
+
+ALTER TABLE `oscshop_lionfish_comshop_subscribe` ADD INDEX( `member_id`, `type`);
+
+
+V10.0.0
+
+ALTER TABLE `oscshop_lionfish_comshop_member_level` ADD `is_auto_grade` TINYINT(1) NULL DEFAULT '0' COMMENT '是否自动升级，0 否，1是' AFTER `level_money`;
+ALTER TABLE `oscshop_lionfish_comshop_goods_category` ADD `is_type_show` TINYINT(1) NULL DEFAULT '0' COMMENT '分类显示' AFTER `is_show_topic`;
+
+
+
+V11.0.0
+
+CREATE TABLE `oscshop_lionfish_comshop_order_goods_refund`
+(
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`order_goods_id` INT(10) NOT NULL COMMENT '商品订单id' ,
+	`order_id` INT(10) NOT NULL COMMENT '订单id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`quantity` INT(10) NOT NULL COMMENT '退款数量' ,
+	`money` FLOAT(10,2) NOT NULL COMMENT '退款金额' ,
+	`order_status_id` INT(10) NOT NULL COMMENT '退款时，订单状态' ,
+	`is_back_quantity` TINYINT(1) NULL COMMENT '是否退商品库存' ,
+	`back_score_for_money` FLOAT(10,2) NOT NULL COMMENT '退还积分兑换商品的积分' ,
+	`back_send_score` FLOAT(10,2) NOT NULL COMMENT '退还赠送积分' ,
+	`back_head_orderbuycommiss` FLOAT(10,2) NOT NULL COMMENT '退还团长佣金' ,
+	`back_head_commiss_1` FLOAT(10,2) NOT NULL COMMENT '退1级团长佣金' ,
+	`back_head_commiss_2` FLOAT(10,2) NOT NULL COMMENT '退2级团长佣金' ,
+	`back_head_commiss_3` FLOAT(10,2) NOT NULL COMMENT '退3级团长佣金' ,
+	`back_member_commiss_1` FLOAT(10,2) NOT NULL COMMENT '退会员1级佣金' ,
+	`back_member_commiss_2` FLOAT(10,2) NOT NULL COMMENT '退会员2级佣金' ,
+	`back_member_commiss_3` FLOAT(10,2) NOT NULL COMMENT '退会员3级佣金' ,
+	`addtime` INT(10) NOT NULL COMMENT '操作时间' ,
+	PRIMARY KEY (`id`), INDEX (`order_goods_id`), INDEX (`order_id`), INDEX (`uniacid`)
+) ENGINE = InnoDB COMMENT = '狮子鱼商城订单商品退款记录表';
+
+ALTER TABLE `oscshop_lionfish_comshop_order_goods_refund` ADD `back_head_supplycommiss` FLOAT(10,2) NULL DEFAULT '0' COMMENT '退还供应商佣金' AFTER `back_head_orderbuycommiss`;
+ALTER TABLE `oscshop_lionfish_comshop_order_goods` ADD `has_refund_money` FLOAT(10,2) NULL DEFAULT '0' COMMENT '已经退款金额' AFTER `total`;
+
+
+V11.1.0
+ALTER TABLE `oscshop_lionfish_comshop_order_goods` ADD `has_refund_quantity` INT(10) NULL DEFAULT '0' COMMENT '已经退款数量' AFTER `has_refund_money`;
+
+
+
+
+V11.3.0
+
+ALTER TABLE `oscshop_lionfish_comshop_order_goods_refund` ADD `real_refund_quantity` INT(10) NULL DEFAULT '0' COMMENT '实际退款的数量' AFTER `uniacid`;
+ALTER TABLE `oscshop_lionfish_comshop_order_refund` ADD `real_refund_quantity` INT(10) NULL DEFAULT '0' COMMENT '退款几个商品' AFTER `order_goods_id`;
+
+
+
+
+V11.4.0
+
+ALTER TABLE `oscshop_lionfish_comshop_supply` ADD `qualifications` TEXT NULL COMMENT '工商资质' AFTER `login_slat`;
+
+
+
+V11.6.0
+
+CREATE TABLE `oscshop_lionfish_comshop_salesroom`
+(
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`supply_id` INT(10) NULL COMMENT '商户id' ,
+	`room_name` VARCHAR(255) NOT NULL COMMENT '门店名称' ,
+	`room_logo` VARCHAR(255) NOT NULL COMMENT '门店logo' ,
+	`province_id` INT(10) NOT NULL COMMENT '省' ,
+	`city_id` INT(10) NOT NULL COMMENT '市' ,
+	`country_id` INT(10) NOT NULL COMMENT '区' ,
+	`area_id` INT(10) NOT NULL COMMENT '镇' ,
+	`address` VARCHAR(255) NOT NULL COMMENT '详细地址' ,
+	`lon` FLOAT(10.6) NOT NULL COMMENT '经度' ,
+	`lat` FLOAT(10.6) NOT NULL COMMENT '纬度' ,
+	`state` TINYINT(1) NOT NULL COMMENT '状态，0禁用，1启用' ,
+	`mobile` VARCHAR(25) NOT NULL COMMENT '手机' ,
+	`business_hours` VARCHAR(100) NOT NULL COMMENT '营业时间' ,
+	`contacts` VARCHAR(50) NOT NULL COMMENT '联系人' ,
+	`store_introduction` TEXT NOT NULL COMMENT '门店介绍' ,
+	`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+	PRIMARY KEY (`id`), INDEX (`uniacid`), INDEX (`supply_id`)
+) ENGINE = InnoDB COMMENT = '核销门店';
+
+CREATE TABLE `oscshop_lionfish_comshop_salesroom_member`
+(
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`username` VARCHAR(255) NOT NULL COMMENT '用户名' ,
+	`mobile` VARCHAR(25) NOT NULL COMMENT '手机号' ,
+	`member_id` INT(10) NOT NULL COMMENT '会员id' ,
+	`state` TINYINT(1) NOT NULL COMMENT '状态，0禁用，1启用' ,
+	`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+	PRIMARY KEY (`id`), INDEX (`uniacid`), INDEX (`member_id`)
+) ENGINE = InnoDB COMMENT = '门店核销人员表';
+
+CREATE TABLE `oscshop_lionfish_comshop_salesroom_relative_member`
+(
+	`id` INT(10) NOT NULL AUTO_INCREMENT COMMENT '自增id' ,
+	`uniacid` INT(10) NOT NULL COMMENT '公众号id' ,
+	`salesroom_id` INT(10) NOT NULL COMMENT '门店id' ,
+	`member_id` INT(10) NOT NULL COMMENT '会员id' ,
+	`addtime` INT(10) NOT NULL COMMENT '添加时间' ,
+	PRIMARY KEY (`id`), INDEX (`uniacid`), INDEX (`salesroom_id`), INDEX (`member_id`)
+) ENGINE = InnoDB COMMENT = '门店核销人员跟门店关联表';
+
